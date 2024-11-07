@@ -2,21 +2,21 @@
 # important settings can be changed from the admin interface.
 
 defaults: &defaults
-  site_title: Mastodon
-  site_short_description: ''
+  site_title: ASAi-ASA
+  site_short_description: 'ASAi-ASA: Social Volunteer Platform'
   site_description: ''
   site_extended_description: ''
   site_terms: ''
   site_contact_username: ''
   site_contact_email: ''
-  registrations_mode: 'none'
+  registrations_mode: 'open'
   profile_directory: true
   closed_registrations_message: ''
   timeline_preview: true
   show_staff_badge: true
   preview_sensitive_media: false
   noindex: false
-  theme: 'system'
+  theme: 'mastodon-light'
   trends: true
   trends_as_landing_page: true
   trendable_by_default: false
