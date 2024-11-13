@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: asaiasa-platform-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare
+spec:
+  rules:
+  - host: app.asaiasa.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-asaiasa-service
+            port:
+              number: 8000
+  tls:
+  - hosts:
+    - app.asaiasa.com
+    secretName: app-asaiasa-com-tls

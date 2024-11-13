@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streaming
+  template:
+    metadata:
+      labels:
+        app: streaming
+    spec:
+      containers:
+        - name: streaming
+          image: ghcr.io/mastodon/mastodon-streaming:v4.3.0
+          command: ["node", "./streaming/index.js"]
+          envFrom:
+            - configMapRef:
+                name: mastodon-config
+          readinessProbe:
+            exec:
+              command: ["curl", "-s", "--noproxy", "localhost", "localhost:4000/api/v1/streaming/health"]
+            initialDelaySeconds: 10
+            periodSeconds: 5

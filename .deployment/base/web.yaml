@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/mastodon/mastodon:v4.3.0
+          command: ["bundle", "exec", "puma", "-C", "config/puma.rb"]
+          envFrom:
+            - configMapRef:
+                name: mastodon-config
+          volumeMounts:
+            - mountPath: /mastodon/public/system
+              name: web-data
+          readinessProbe:
+            exec:
+              command: ["curl", "-s", "--noproxy", "localhost", "localhost:3000/health"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+  volumes:
+    - name: web-data
+      persistentVolumeClaim:
+        claimName: web-pvc
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: web-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

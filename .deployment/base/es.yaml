@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: es
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: es
+  template:
+    metadata:
+      labels:
+        app: es
+    spec:
+      containers:
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:7.17.4
+          env:
+            - name: ES_JAVA_OPTS
+              value: "-Xms512m -Xmx512m -Des.enforce.bootstrap.checks=true"
+            - name: xpack.license.self_generated.type
+              value: "basic"
+            - name: xpack.security.enabled
+              value: "false"
+            - name: xpack.watcher.enabled
+              value: "false"
+            - name: xpack.graph.enabled
+              value: "false"
+            - name: xpack.ml.enabled
+              value: "false"
+            - name: bootstrap.memory_lock
+              value: "true"
+            - name: cluster.name
+              value: "es-mastodon"
+            - name: discovery.type
+              value: "single-node"
+            - name: thread_pool.write.queue_size
+              value: "1000"
+          volumeMounts:
+            - mountPath: /usr/share/elasticsearch/data
+              name: es-data
+          readinessProbe:
+            exec:
+              command: ["curl", "--silent", "--fail", "localhost:9200/_cluster/health"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+  volumes:
+    - name: es-data
+      persistentVolumeClaim:
+        claimName: es-pvc
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: es-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
