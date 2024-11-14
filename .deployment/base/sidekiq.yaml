@@ -2,8 +2,15 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sidekiq
+  labels:
+    app: sidekiq
 spec:
-  replicas: 1
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: sidekiq
@@ -12,35 +19,37 @@ spec:
       labels:
         app: sidekiq
     spec:
+      imagePullSecrets:
+      - name: gitlab-registry-credentials
       containers:
-        - name: sidekiq
-          image: ghcr.io/mastodon/mastodon:v4.3.0
-          command: ["bundle", "exec", "sidekiq"]
-          envFrom:
-            - configMapRef:
-                name: mastodon-config
-          volumeMounts:
-            - mountPath: /mastodon/public/system
-              name: sidekiq-data
-          readinessProbe:
-            exec:
-              command: ["ps", "aux", "|", "grep", "[s]idekiq"]
-            initialDelaySeconds: 10
-            periodSeconds: 5
-  volumes:
-    - name: sidekiq-data
-      persistentVolumeClaim:
-        claimName: sidekiq-pvc
+      - name: sidekiq
+        image: asaiasa-platform
+        command: ["bundle", "exec", "sidekiq"]
+        envFrom:
+        - configMapRef:
+            name: asaiasa-config
+        volumeMounts:
+        - mountPath: /mastodon/public/system
+          name: sidekiq-data
+        readinessProbe:
+          exec:
+            command: ["ps", "aux", "|", "grep", "[s]idekiq"]
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: sidekiq-data
+        persistentVolumeClaim:
+          claimName: sidekiq-pvc
 
 ---
-
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: sidekiq-pvc
 spec:
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteMany
+  storageClassName: nfs-client
   resources:
     requests:
       storage: 1Gi

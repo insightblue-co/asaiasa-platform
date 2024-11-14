@@ -1,0 +1,11 @@
+resources:
+- web.yaml
+- sidekiq.yaml
+- streaming.yaml
+- redis.yaml
+- service.yaml
+
+images:
+- name: asaiasa-platform
+  newName: registry.gitlab.com/insightblue/asaiasa-web
+  newTag: ${VERSION}

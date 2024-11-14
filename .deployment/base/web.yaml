@@ -2,8 +2,15 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: web
+  labels:
+    app: web
 spec:
-  replicas: 1
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: web
@@ -12,35 +19,48 @@ spec:
       labels:
         app: web
     spec:
+      imagePullSecrets:
+      - name: gitlab-registry-credentials
+      initContainers:
+      - name: init
+        image: asaiasa-platform
+        command: ["bin/setup"]
+        envFrom:
+        - configMapRef:
+            name: asaiasa-config
+        volumeMounts:
+        - mountPath: /mastodon/public/system
+          name: web-data
       containers:
-        - name: web
-          image: ghcr.io/mastodon/mastodon:v4.3.0
-          command: ["bundle", "exec", "puma", "-C", "config/puma.rb"]
-          envFrom:
-            - configMapRef:
-                name: mastodon-config
-          volumeMounts:
-            - mountPath: /mastodon/public/system
-              name: web-data
-          readinessProbe:
-            exec:
-              command: ["curl", "-s", "--noproxy", "localhost", "localhost:3000/health"]
-            initialDelaySeconds: 10
-            periodSeconds: 5
-  volumes:
-    - name: web-data
-      persistentVolumeClaim:
-        claimName: web-pvc
+      - name: web
+        image: asaiasa-platform
+        # command: ["bundle", "exec", "puma", "-C", "config/puma.rb"]
+        command: ["bin/dev"]
+        envFrom:
+        - configMapRef:
+            name: asaiasa-config
+        volumeMounts:
+        - mountPath: /mastodon/public/system
+          name: web-data
+        readinessProbe:
+          exec:
+            command: ["curl", "-s", "--noproxy", "localhost", "localhost:3000/health"]
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: web-data
+        persistentVolumeClaim:
+          claimName: web-pvc
 
 ---
-
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: web-pvc
 spec:
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteMany
+  storageClassName: nfs-client
   resources:
     requests:
       storage: 1Gi

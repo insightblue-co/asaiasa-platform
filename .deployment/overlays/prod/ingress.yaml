@@ -6,7 +6,7 @@ metadata:
     cert-manager.io/cluster-issuer: cloudflare
 spec:
   rules:
-  - host: app.asaiasa.com
+  - host: asaiasa.com
     http:
       paths:
       - path: /
@@ -15,8 +15,8 @@ spec:
           service:
             name: app-asaiasa-service
             port:
-              number: 8000
+              number: 3000
   tls:
   - hosts:
-    - app.asaiasa.com
-    secretName: app-asaiasa-com-tls
+    - asaiasa.com
+    secretName: asaiasa-com-tls
